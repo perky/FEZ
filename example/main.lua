@@ -33,7 +33,7 @@ function love.load()
 end
 
 function love.update( dt )
-	entityManager:updateEntitiesBehaviours( dt )
+	entityManager:updateBehaviours( dt )
 	inputController:update( dt )
 	playerCollisionController:update( dt )
 end

@@ -181,7 +181,7 @@ function EntityManager()
     -- Update:
     -----------------------
 
-    function em:updateEntitiesBehaviours( dt )
+    function em:updateBehaviours( dt )
         for i, component in ipairs( self.components ) do
             if component and component._kind == "Behaviour" and component:getEnabled() then
                 component:updateOwner( dt, component._owner )
