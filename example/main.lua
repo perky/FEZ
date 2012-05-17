@@ -3,12 +3,12 @@ package.path = package.path .. ";../?/init.lua;../?.lua"
 require 'src' -- change this to whatever the lua_entity_system src resides in.
 require 'attributes.Transform'
 require 'attributes.Velocity'
-require 'attributes.Shape'
 require 'attributes.ShapeCircle'
 require 'attributes.ShapeHexagon'
 require 'attributes.Input'
 require 'attributes.Collidable'
 require 'behaviours.PlayerMovement'
+require 'behaviours.ShapeCollision'
 require 'controllers.InputController'
 require 'controllers.PlayerCollisionController'
 require 'renderers.PlayerRenderer'
@@ -17,12 +17,13 @@ require 'renderers.HudRenderer'
 require 'EntityFactory'
 
 function love.load()
-	entityManager   = EntityManager()
-	inputController = InputController()
-	playerCollisionController = PlayerCollisionController()
-	playerRenderer  = PlayerRenderer()
-	hexagonRenderer = HexagonRenderer()
-	hudRenderer     = HudRenderer()
+	entityManager             = EntityManager()
+	controllerManager         = ControllerManager( entityManager )
+	inputController           = InputController( controllerManager )
+	playerCollisionController = PlayerCollisionController( controllerManager )
+	playerRenderer            = PlayerRenderer( controllerManager )
+	hexagonRenderer           = HexagonRenderer( controllerManager )
+	hudRenderer               = HudRenderer( controllerManager )
 
 	EntityFactory:createPlayer( entityManager, 100, 100, 10 )
 	for i=1,20 do

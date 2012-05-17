@@ -1,4 +1,4 @@
-PlayerMovement = class('PlayerMovement', Behaviour)
+PlayerMovement = Behaviour('PlayerMovement')
 
 function PlayerMovement:onInit()
 	self:listen( "start_move_player_right", self.eventStartMovePlayerRight )
@@ -15,10 +15,12 @@ function PlayerMovement:onInit()
 end
 
 function PlayerMovement:onOwnerRefresh( owner )
-	-- For quick access to other components we can create
-	-- references in this function.
-	self.transform = owner:getComponent( Transform )
-	self.velocity  = owner:getComponent( Velocity )
+	-- For quick access to other components we can create references once the owner has refreshed.
+	-- We don't use ComponentCache here because we only use the owner's components in a behaviour.
+	-- See InputController.lua for how ComponentCache works.
+	--
+	self.transform = entityManager:getComponentFromEntity( owner, Transform )
+	self.velocity  = entityManager:getComponentFromEntity( owner, Velocity )
 end
 
 -----------------------
@@ -82,7 +84,7 @@ end
 -- Update:
 -----------------------
 
-function PlayerMovement:update( dt, owner )
+function PlayerMovement:updateOwner( dt, owner )
 	-- Unlike controllers which update a set of filtered entities
 	-- Behaviours update thier owner, the entity that has added this behaviour.
 	local angle = 0

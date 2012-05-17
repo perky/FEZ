@@ -1,25 +1,29 @@
-PlayerCollisionController = class('PlayerCollisionController', Controller)
+PlayerCollisionController = Controller('PlayerCollisionController')
 
 function PlayerCollisionController:onInit()
-	self:addComponentFilters( Collidable, ShapeCircle, Transform )  
+	self:addComponentFilters( Collidable, ShapeCircle, Transform )
+	self.shapeCircle 	= ComponentCache( ShapeCircle, entityManager )
+	self.collidable 	= ComponentCache( Collidable, entityManager )
+	self.transform 		= ComponentCache( Transform, entityManager )
+	self.shapeHexagon   = ComponentCache( ShapeHexagon, entityManager )
 end
 
 function PlayerCollisionController:updateEntity( dt, entity, ... )
-	local hexagonEntities = entityManager:getEntitiesWithComponents( ShapeHexagon, Transform )
-	local shapeCircle = entity.shapeCircle
-	local x, y        = entity.transform:getXY()
+	local hexagonEntities = entityManager:getEntitiesWithComponent( ShapeHexagon )
+	local shapeCircle = self.shapeCircle( entity )
+	local x, y        = self.transform( entity ):getXY()
 
-	entity.collidable:setIsColliding( false )
-	entity.collidable:setCollidingEntity( nil )
+	self.collidable( entity ):setIsColliding( false )
+	self.collidable( entity ):setCollidingEntity( nil )
 
 	for i, hexagonEntity in ipairs( hexagonEntities ) do
-		local vertices = hexagonEntity.shapeHexagon:getVertices()
-		local hx, hy   = hexagonEntity.transform:getXY()
+		local vertices = self.shapeHexagon( hexagonEntity ):getVertices()
+		local hx, hy   = self.transform( hexagonEntity ):getXY()
 		for i=1, #vertices, 2 do
 			local vx, vy = vertices[i], vertices[i+1]
 			if shapeCircle:isPointInside( (vx+hx) - x, (vy+hy) - y ) then
-				entity.collidable:setIsColliding( true )
-				entity.collidable:setCollidingEntity( hexagonEntity )
+				self.collidable( entity ):setIsColliding( true )
+				self.collidable( entity ):setCollidingEntity( hexagonEntity )
 			end
 		end
 	end

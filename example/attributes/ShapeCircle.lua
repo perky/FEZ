@@ -1,4 +1,4 @@
-ShapeCircle = class('ShapeCircle', Shape)
+ShapeCircle = Attribute('ShapeCircle')
 
 function ShapeCircle:onInit( radius )
     self.radius = radius

@@ -1,4 +1,4 @@
-Transform = class('Transform', Attribute)
+Transform = Attribute( 'Transform' )
 
 function Transform:onInit( x, y, r, s, z )
     self.x          = x or 0

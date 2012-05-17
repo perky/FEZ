@@ -1,58 +1,77 @@
-Component = class('Component', nil)
-
-function Component:initialize( ... )
-    self._accessor = self.class.name:sub(1,1):lower() .. self.class.name:sub(2,-1)
-    self._owner = nil
-    self:onInit( ... )
-end
-
-function Component:destroy()
-	self._owner = nil
-	self:onDestroy()
-end
-
---------------------
--- Implementation:
--- Override these methods.
---------------------
-
-function Component:onInit() end
-
-function Component:onDestroy() end
-
-function Component:onOwnerRefresh( owner ) end
-
 -----------------------
--- Getters & Setters:
+-- Public:
 -----------------------
 
-function Component:getAccessorName()
-    return self._accessor
+function Attribute( name, group, inherits )
+	local attribute = Component( 'Attribute', name, inherits, group )
+	return attribute
 end
 
-function Component:setOwner( owner )
-    self._owner = owner
-end
+function Behaviour( name, group, inherits )
+	local behaviour = Component( 'Behaviour', name, inherits )
+	behaviour._enabled = true
 
-function Component:getOwner()
-    return self._owner
-end
+	function behaviour:updateOwner( dt, owner ) end
 
------------------------
--- Methods:
------------------------
-
-function Component:listen( eventName, callback, tags )
-	if tags == nil then
-		tags = {self}
-	elseif type(tags) == "string" then
-		tags = { self, tags }
-	elseif type(tags) == "table" then
-		table.insert( tags, self )
+	function behaviour:setEnabled( enabled )
+		self._enabled = enabled
 	end
-    EventDispatcher.listen( eventName, tags, callback, self )
+
+	function behaviour:getEnabled()
+		return self._enabled
+	end
+
+	return behaviour
 end
 
-function Component:send( name, ... )
-	EventDispatcher.send( name, self:getOwner(), ... )
+-----------------------
+-- Private:
+-----------------------
+local _typeID = 0
+
+local function _getUniqueTypeID()
+	_typeID = _typeID + 1
+	return _typeID
+end
+
+function Component( kind, name, inherits )
+	local component        = {}
+	component._isComponent = true
+	component._typeid      = _getUniqueTypeID()
+	component._kind        = kind
+	component._name        = name
+    
+    local function init(self,...)
+        local new = setmetatable({}, component._mt)
+        self.onInit(new,...)
+        return new
+    end
+
+    local function equals( componentA, componentB )
+    	return componentA._typeid == componentB._typeid
+    end
+
+    local function toString( component )
+    	return ("(%s:%s)"):format( component._name, component._kind )
+    end
+
+    function component:onInit( ... ) 			end
+    function component:onDestroy() 				end
+    function component:onOwnerRefresh( owner ) 	end
+
+    function component:setOwner( owner )
+    	self._owner = owner
+    end
+
+    function component:getOwner()
+    	return self._owner
+    end
+
+    function component:listen( eventName, callback )
+    	EventDispatcher.listen( eventName, self, callback, self )
+    end
+
+    component._mt   = { __index = component, __eq == equals, __tostring = toString }
+    setmetatable( component, { __call = init, __index = inherits, __eq = equals, __tostring = toString } )
+    return component
 end

@@ -1,4 +1,4 @@
-Velocity = class('Velocity', Attribute)
+Velocity = Attribute('Velocity')
 
 function Velocity:onInit( speed, angle )
     self.speed = speed or 0

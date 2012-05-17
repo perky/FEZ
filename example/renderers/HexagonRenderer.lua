@@ -1,14 +1,17 @@
-HexagonRenderer = class('HexagonRenderer', Renderer)
+HexagonRenderer = Controller('HexagonRenderer')
 
 function HexagonRenderer:onInit(  )
 	self:setComponentFilters( Transform, ShapeHexagon, Input )
+	self.input 			= ComponentCache( Input, entityManager )
+	self.transform 		= ComponentCache( Transform, entityManager )
+	self.shapeHexagon   = ComponentCache( ShapeHexagon, entityManager )
 end
 
 function HexagonRenderer:renderEntity( entity, ... )
-	local hexagonVertices 	= entity.shapeHexagon:getVertices()
-	local x, y 				= entity.transform:getXY()
+	local hexagonVertices 	= self.shapeHexagon( entity ):getVertices()
+	local x, y 				= self.transform( entity ):getXY()
 
-	if entity.input:getMouseIsOver() then
+	if self.input( entity ):getMouseIsOver() then
 		love.graphics.setColor( 190, 190, 55 )
 	else
 		love.graphics.setColor( 190, 30, 55 )

@@ -1,1 +1,0 @@
-Attribute = class('Attribute', Component)

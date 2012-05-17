@@ -1,4 +1,4 @@
-ShapeHexagon = class('ShapeHexagon', Shape)
+ShapeHexagon = Attribute('ShapeHexagon')
 
 local _sin60 = math.sin( math.rad( 60 ) )
 local _sin30 = math.sin( math.rad( 30 ) )

@@ -1,4 +1,4 @@
-Input = class('Input', Attribute)
+Input = Attribute('Input')
 
 function Input:onInit()
 	self.mouseIsOver = false

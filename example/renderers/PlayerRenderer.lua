@@ -1,22 +1,23 @@
-PlayerRenderer = class('PlayerRenderer', Renderer)
+PlayerRenderer = Controller('PlayerRenderer')
 
 function PlayerRenderer:onInit()
 	-- Any entities that have all these components will be passed to
 	-- the renderEntity method.
 	self:setComponentFilters( Transform, ShapeCircle, Input, Collidable )
+
+	self.shapeCircle 	= ComponentCache( ShapeCircle, entityManager )
+	self.collidable 	= ComponentCache( Collidable, entityManager )
+	self.transform 		= ComponentCache( Transform, entityManager )
+	self.input   		= ComponentCache( Input, entityManager )
 end
 
 function PlayerRenderer:renderEntity( playerEntity, ... )
-	-- There are two ways of getting a component from an entity.
-	-- You can call the 'getComponent( componentClass )' method on the entity, 
-	-- this will throw an error if the entity does not have the component.
-	-- Or you can access it directly through a period like 'entity.componentClass'
-	-- note that the first letter is lower case, the rest is camel case.
-	local x, y = playerEntity:getComponent( Transform ):getXY()
-	local circleRadius = playerEntity.shapeCircle:getRadius()
-	local mouseIsOver = playerEntity.input:getMouseIsOver()
-	local isColliding = playerEntity.collidable:getIsColliding()
 
+	local x, y = self.transform( playerEntity ):getXY()
+	local circleRadius = self.shapeCircle( playerEntity ):getRadius()
+	local mouseIsOver = self.input( playerEntity ):getMouseIsOver()
+	local isColliding = self.collidable( playerEntity ):getIsColliding()
+	
 	if isColliding then
 		love.graphics.setColor( 255, 50, 50 )
 	elseif mouseIsOver then

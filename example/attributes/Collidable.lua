@@ -1,4 +1,4 @@
-Collidable = class('Collidable', Attribute)
+Collidable = Attribute('Collidable')
 
 function Collidable:onInit()
 	self.isColliding = false
