@@ -31,7 +31,7 @@ function EntityManager()
     em.components  = {}
     em.entitiesToComponentTypes = bag.new(  )
     em.componentTypesToEntities = bag.new(  )
-    --em.tagManager  = EntityTagManager( em )
+    em.tagManager  = EntityTagManager( em )
 
     -----------------------
     -- Entity Initialization:

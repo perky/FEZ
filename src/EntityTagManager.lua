@@ -1,53 +1,53 @@
+local _path = ({...})[1]:gsub("%.EntityTagManager", "")
+local bag = require( _path .. '.util.bag' )
+
 function EntityTagManager( entityManager )
   local entityTagManager = {}
   entityTagManager.entityManager = entityManager
-  entityTagManager._tagsToEntities = {}
-  entityTagManager._entitiesToTags = {}
-
+  entityTagManager.tagsToEntities = bag.new()
+  entityTagManager.entitiesToTags = bag.new()
 
   function entityTagManager:addTagsToEntity( entity, ... )
     local tags = {...}
-    if type(entity) ~= "number" then
-      entity = entity:getId()
-    end
-
-    self._entitiesToTags[ entity ] = tags
+    self.entitiesToTags:set( entity, tags )
     for i, tag in ipairs(tags) do
-      if not self._tagsToEntities[ tag ] then
-        self._tagsToEntities[ tag ] = {}
+      local tagToEntities = self.tagsToEntities:get( tag )
+      if not tagToEntities then
+        tagToEntities = {}
+        self.tagsToEntities:set( tag, tagToEntities )
       end
-      table.insert( self._tagsToEntities[ tag ], entity )
+      tagToEntities[#tagToEntities+1] = entity
     end
   end
 
   function entityTagManager:getEntitiesWithTag( tag )
-    return self._tagsToEntities[ tag ]
+    return self.tagsToEntities:get( tag )
   end
 
   function entityTagManager:getTagsFromEntity( entity )
-    return self._entitiesToTags[ entity:getId() ]
+    return self.entitiesToTags:get( entity )
   end
 
   function entityTagManager:getEntitiesWithAnyTags( ... )
-   local tags = {...}
-   local entities = {}
-
-   for eid, etags in ipairs( self._entitiesToTags ) do
-     if self:entityHasAnyTags( eid, tags ) then
-       entities[#entities+1] = self.entityManager:getEntity( eid )
-     end
-   end
-
-   return entities
- end
-
-   function entityTagManager:getEntitiesWithAllTags( ... )
-    local tags = {...}
+    local queryTags = {...}
     local entities = {}
 
-    for eid, etags in ipairs( self._entitiesToTags ) do
-      if self:entityHasAllTags( eid, tags ) then
-        entities[#entities+1] = self.entityManager:getEntity( eid )
+    for entity, tags in pairs( self.entitiesToTags ) do
+      if self:entityHasAnyTags( entity, queryTags ) then
+        entities[#entities+1] = entity
+      end
+    end
+
+    return entities
+  end
+
+  function entityTagManager:getEntitiesWithAllTags( ... )
+    local queryTags = {...}
+    local entities = {}
+
+    for entity, tags in ipairs( self.entitiesToTags ) do
+      if self:entityHasAllTags( entity, queryTags ) then
+        entities[#entities+1] = entity
       end
     end
 
@@ -60,25 +60,24 @@ function EntityTagManager( entityManager )
     end
   end
 
-  function entityTagManager:entityHasAnyTags( entityid, tags )
-    for i, etag in ipairs( self._entitiesToTags[entityid] ) do
-      for j, tag in ipairs(tags) do
-        if tag == etag then return true end
+  function entityTagManager:entityHasAnyTags( entity, queryTags )
+    for i, tag in ipairs( self.entitiesToTags:get( entity ) ) do
+      for j, queryTag in ipairs(queryTags) do
+        if tag == queryTag then return true end
       end
     end
   end
 
-  function entityTagManager:entityHasAllTags( entityid, tags )
-    local unmatchedTags = #tags
+  function entityTagManager:entityHasAllTags( entity, queryTags )
+    local unmatchedTags = #queryTags
 
-    for i, etag in ipairs( self._entitiesToTags[entityid] ) do
-      for j, tag in ipairs(tags) do
-        if tag == etag then
+    for i, tag in ipairs( self.entitiesToTags:get( entity ) ) do
+      for j, queryTag in ipairs(queryTags) do
+        if tag == queryTag then
           unmatchedTags = unmatchedTags - 1
         end
       end
     end
-
     return unmatchedTags == 0
   end
 

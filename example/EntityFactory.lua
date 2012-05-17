@@ -2,6 +2,7 @@ EntityFactory = {}
 
 function EntityFactory:createPlayer( entityManager, x, y, radius )
 	local player = entityManager:createEntity( "PLAYER" )
+	entityManager.tagManager:addTagsToEntity( player, "Player" )
 	local shapeCircle    = ShapeCircle( radius )
 	local shapeCollision = ShapeCollision( shapeCircle )
 	entityManager:addComponentToEntity( player, Transform( x, y ) )
@@ -20,6 +21,7 @@ end
 
 function EntityFactory:createHexagon( entityManager, x, y, sideLength )
 	local hexagon = entityManager:createEntity( "HEXAGON" )
+	entityManager.tagManager:addTagsToEntity( hexagon, "Hexagon" )
 	local shapeHexagon = ShapeHexagon( sideLength )
 	local shapeCollision = ShapeCollision( shapeHexagon )
 	entityManager:addComponentToEntity( hexagon, Transform( x, y ) )
