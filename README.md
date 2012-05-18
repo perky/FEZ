@@ -1,6 +1,7 @@
-![FEZ Logo](http://i.imgur.com/EmlOL.png)
+![FEZ Logo](http://i.imgur.com/YWPMM.png)
 
-Frankenstein Entity System.
+
+FEZ
 =================
 
 A lua library that helps you create component based projects.
