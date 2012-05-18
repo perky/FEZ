@@ -26,6 +26,10 @@ function bag:contains( e )
 	return self[e] ~= nil
 end
 
+function bag:hasType( component )
+	return self[component._type] ~= nil
+end
+
 function bag:valuesToList()
 	local list = {}
 	for k,v in pairs(self) do
