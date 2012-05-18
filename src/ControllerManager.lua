@@ -10,6 +10,7 @@ function ControllerManager( entityManager )
     end
 
     function cm:addController( controller )
+        print( controller._name )
         assert( self.controllers[controller._name] == nil, "Controller "..controller._name.." already added.")
         self.controllers[controller._name] = controller
     end
@@ -25,13 +26,14 @@ function Controller( name, inherits )
     local controller = {}
     controller._kind = 'Controller'
     controller._name = name
-    controller._mt   = { __index = inherits or controller }
+    controller._inherits = inherits
+    controller._mt   = { __index = controller }
 
     -----------------------
     -- Interface:
     -----------------------
 
-    function controller:updateEntity( dt, entity, ... ) end
+    function controller:updateEntity( entity, ... ) end
     function controller:renderEntity( entity, ... )     end
     function controller:onInit( ... )                   end
     function controller:onDestroy()                     end
@@ -47,13 +49,13 @@ function Controller( name, inherits )
         return new
     end
 
-    function controller:setup( controllerManager )
-        controllerManager:addController( self )
-        self.controllerManager = controllerManager
-        self.filters  = {}
-        self.entities = {}
-        EventDispatcher.listen( "on_entity_refresh", self, self.eventEntityRefresh, self )
-        EventDispatcher.listen( "on_entity_destroy", self, self.eventEntityDestroy, self )
+    function controller.setup( new, controllerManager )
+        controllerManager:addController( new )
+        new.controllerManager = controllerManager
+        new.filters  = {}
+        new.entities = {}
+        EventDispatcher.listen( "on_entity_refresh", new, new.eventEntityRefresh, new )
+        EventDispatcher.listen( "on_entity_destroy", new, new.eventEntityDestroy, new )
     end
 
     function controller:destroy(  )
@@ -153,13 +155,13 @@ function Controller( name, inherits )
     -- Update:
     -----------------------
 
-    function controller:update( dt, ... )
-        self:updateEntities( dt, self.entities, ... )
+    function controller:update( ... )
+        self:updateEntities( self.entities, ... )
     end
 
-    function controller:updateEntities( dt, entities, ... )
+    function controller:updateEntities( entities, ... )
         for i, entity in ipairs( entities ) do
-            self:updateEntity( dt, entity, ... )
+            self:updateEntity( entity, ... )
         end
     end
 
@@ -173,5 +175,7 @@ function Controller( name, inherits )
         end
     end
 
-    return setmetatable( controller, { __call = controller.init } )
+    local mt = { __call = controller.init }
+    if inherits then mt.__index = inherits end
+    return setmetatable( controller, mt )
 end

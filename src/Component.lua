@@ -2,12 +2,12 @@
 -- Public:
 -----------------------
 
-function Attribute( name, group, inherits )
-	local attribute = Component( 'Attribute', name, inherits, group )
+function Attribute( name, inherits )
+	local attribute = Component( 'Attribute', name, inherits )
 	return attribute
 end
 
-function Behaviour( name, group, inherits )
+function Behaviour( name, inherits )
 	local behaviour = Component( 'Behaviour', name, inherits )
 	behaviour._enabled = true
 
@@ -72,6 +72,5 @@ function Component( kind, name, inherits )
     end
 
     component._mt   = { __index = component, __eq == equals, __tostring = toString }
-    setmetatable( component, { __call = init, __index = inherits, __eq = equals, __tostring = toString } )
-    return component
+    return setmetatable( component, { __call = init, __index = inherits, __eq = equals, __tostring = toString } )
 end

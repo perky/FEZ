@@ -63,6 +63,8 @@ function EntityManager()
             self.entitiesToComponentTypes:set( entity, entityToComponentTypes )
         end
         entityToComponentTypes:set( component._typeid, component )
+        
+        return component
     end
 
     function em:refreshEntity( entity )
@@ -181,10 +183,10 @@ function EntityManager()
     -- Update:
     -----------------------
 
-    function em:updateBehaviours( dt )
+    function em:updateBehaviours( ... )
         for i, component in ipairs( self.components ) do
             if component and component._kind == "Behaviour" and component:getEnabled() then
-                component:updateOwner( dt, component._owner )
+                component:updateOwner( component._owner, ... )
             end
         end
     end
