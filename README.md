@@ -1,4 +1,6 @@
-Lua-Entity-System
+![FEZ Logo](http://i.imgur.com/EmlOL.png)
+
+Frankenstein Entity System.
 =================
 
 A lua library that helps you create component based projects.
