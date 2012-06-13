@@ -1,25 +1,30 @@
 function ControllerManager( entityManager )
-    local cm = {}
-    cm._kind = 'ControllerManager'
-    cm.controllers = {}
-    cm.entityManager = entityManager
+    local controllerManager = {}
+    controllerManager._kind = 'ControllerManager'
+    controllerManager.controllers = {}
+    controllerManager.entityManager = entityManager
 
-    function cm:getController( controller )
+    function controllerManager:get( controller )
         assert( self.controllers[controller._name], "Controller "..controller._name.." does not exist.")
         return self.controllers[ controller._name ]
     end
 
-    function cm:addController( controller )
-        print( controller._name )
+    function controllerManager:add( controller )
         assert( self.controllers[controller._name] == nil, "Controller "..controller._name.." already added.")
         self.controllers[controller._name] = controller
     end
 
-    function cm:removeController( controller )
+    function controllerManager:remove( controller )
         self.controllers[controller._name] = nil
     end
 
-    return cm
+    function controllerManager:refresh()
+        for k, controller in pairs(self.controllers) do
+            controller:onControllersRefresh( self )
+        end
+    end
+
+    return controllerManager
 end
 
 function Controller( name, inherits )
@@ -28,6 +33,7 @@ function Controller( name, inherits )
     controller._name = name
     controller._inherits = inherits
     controller._mt   = { __index = controller }
+    controller.super = controller
 
     -----------------------
     -- Interface:
@@ -37,6 +43,7 @@ function Controller( name, inherits )
     function controller:renderEntity( entity, ... )     end
     function controller:onInit( ... )                   end
     function controller:onDestroy()                     end
+    function controller:onControllersRefresh( cm )      end
 
     -----------------------
     -- Initialization:
@@ -50,7 +57,7 @@ function Controller( name, inherits )
     end
 
     function controller.setup( new, controllerManager )
-        controllerManager:addController( new )
+        controllerManager:add( new )
         new.controllerManager = controllerManager
         new.filters  = {}
         new.entities = {}
@@ -59,7 +66,7 @@ function Controller( name, inherits )
     end
 
     function controller:destroy(  )
-        self.controllerManager:removeController( self )
+        self.controllerManager:remove( self )
         self.entities = nil
         self.filters  = nil
         self:onDestroy()
@@ -147,8 +154,15 @@ function Controller( name, inherits )
         return self.entities
     end
 
-    function controller:listen( eventName, callback )
-        EventDispatcher.listen( eventName, self, callback, self )
+    function controller:listen( eventName, callback, tags )
+        if not tags then
+            tags = {self}
+        elseif type(tags) == "table" then
+            table.insert( tags, self )
+        elseif type(tags) == "string" then
+            tags = { self, tags }
+        end
+        EventDispatcher.listen( eventName, tags, callback, self )
     end
 
     -----------------------
