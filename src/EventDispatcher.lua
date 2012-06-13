@@ -38,17 +38,15 @@ _listenerHasTags[EventDispatcher.TAGS_ANY] = function( listener, tags )
 end
 
 _listenerHasTags[EventDispatcher.TAGS_ALL] = function( listener, tags )
-	local unmatchedTags = #tags
-	
-	for _, listenerTag in ipairs(listener.tags) do
-		for _, testingTag in ipairs( tags ) do
-			if listenerTag == testingTag then
-				unmatchedTags = unmatchedTags - 1
+	if listener.tags then
+		for _, listenerTag in ipairs(listener.tags) do
+			for _, testingTag in ipairs( tags ) do
+				if listenerTag ~= testingTag then return false end
 			end
 		end
+
+		return true
 	end
-	
-	return unmatchedTags == 0
 end
 
 -----------------------
@@ -56,6 +54,8 @@ end
 -----------------------
 
 function EventDispatcher.listen( name, tags, callback, ... )
+	assert( callback, "Callback is nil" )
+	assert( type(callback) == "function", "Callback is not a function" )
 	if _listeners[name] == nil then
 		_listeners[name] = {}
 		table.insert( _listenersOrdered, _listeners[name] )
