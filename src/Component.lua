@@ -59,6 +59,10 @@ function Component( kind, name, inherits )
     function component:onDestroy() 				end
     function component:onOwnerRefresh( owner ) 	end
 
+    function component:type()
+        return self._typeid
+    end
+
     function component:setOwner( owner )
     	self._owner = owner
     end
@@ -67,8 +71,15 @@ function Component( kind, name, inherits )
     	return self._owner
     end
 
-    function component:listen( eventName, callback )
-    	EventDispatcher.listen( eventName, self, callback, self )
+    function component:listen( eventName, callback, tags )
+        if not tags then
+            tags = {self}
+        elseif type(tags) == "table" then
+            table.insert( tags, self )
+        elseif type(tags) == "string" then
+            tags = { self, tags }
+        end
+    	EventDispatcher.listen( eventName, tags, callback, self )
     end
 
     component._mt   = { __index = component, __eq == equals, __tostring = toString }
