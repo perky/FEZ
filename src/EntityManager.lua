@@ -37,8 +37,9 @@ function EntityManager()
     -- Entity Initialization:
     -----------------------
     
-    function em:createEntity( name )
-        local id = _getUniqueID( self )
+    function em:createEntity( name, id )
+        local id = id or _getUniqueID( self )
+        assert( not self.entities[id], "Entity already exists with id "..id )
         self.entities[id]    = true
         -- Names used for debugging.
         self.entityNames[id] = name or "entity"
@@ -68,10 +69,10 @@ function EntityManager()
     end
 
     function em:refreshEntity( entity )
-        assert( self:entityExists(entity), "Entity "..entity.." does not exist." )
+        self:assert_entity_exists( entity )
         local entityToComponentTypes = self.entitiesToComponentTypes:get( entity )
         for typeid, component in pairs( entityToComponentTypes ) do
-            component:onOwnerRefresh( entity )
+            component:onOwnerRefresh( entity, entityToComponentTypes )
         end
         EventDispatcher.send( "on_entity_refresh", nil, entity, entityToComponentTypes )
     end
@@ -85,7 +86,24 @@ function EntityManager()
     end
 
     function em:componentTypeExists( component )
-        return self.componentTypesToEntities:contains( component._typeid )
+        return self.componentTypesToEntities:hasType( component )
+    end
+
+    -----------------------
+    -- Assertions:
+    -----------------------
+    
+    function em:assert_entity_has_componentType( entity, componentType )
+        local entityHasComponent = self.entitiesToComponentTypes:get( entity ):contains( componentType._typeid )
+        assert( entityHasComponent, "Entity "..self:entityToString( entity ).." does not possess component "..tostring(componentType))
+    end
+
+    function em:assert_entity_exists( entity )
+        assert( self:entityExists(entity), "Entity "..self:entityToString( entity ).." does not exist." )
+    end
+
+    function em:assert_componentType_exists( componentType )
+        assert( self:componentTypeExists(componentType), "Component "..tostring(componentType).." does not exist." )
     end
 
     -----------------------
@@ -100,46 +118,50 @@ function EntityManager()
         return self.components
     end
 
-    function em:getComponentFromEntity( entity, component )
-        assert( self:entityExists(entity), "Entity "..self:entityToString(entity).." does not exist." )
-        assert( self:componentTypeExists(component), "Entity "..self:entityToString( entity ).." does not possess component "..tostring(component))
-        return self.entitiesToComponentTypes:get( entity ):get( component._typeid )
+    function em:getComponentFromEntity( entity, componentType )
+        self:assert_entity_exists( entity )
+        self:assert_entity_has_componentType( entity, componentType )
+        return self.entitiesToComponentTypes:get( entity ):get( componentType._typeid )
     end
 
     function em:getEntityComponents( entity )
-        assert( self.entityExists( entity ), "Entity "..self:entityToString(entity).." does not exist." )
+        self:assert_entity_exists( entity )
         local entityToComponentTypes = self.entitiesToComponentTypes:get( entity )
         return entityToComponentTypes:valuesToList()
     end
 
-    function em:getEntitiesWithComponent( component )
-        assert( self:componentTypeExists(component), "Component "..tostring(component).." does not exist." )
-        return self.componentTypesToEntities:get( component._typeid ):keysToList()
+    function em:getEntitiesWithComponent( componentType )
+        self:assert_componentType_exists( componentType )
+        return self.componentTypesToEntities:get( componentType._typeid ):keysToList()
     end
 
-    function em:getComponentsOfType( component )
-        assert( self:componentTypeExists(component), "Component "..tostring(component).." does not exist." )
-        return self.componentTypesToEntities:get( component._typeid ):valuesToList()
+    function em:getComponentsOfType( componentType )
+        self:assert_componentType_exists( componentType )
+        return self.componentTypesToEntities:get( componentType._typeid ):valuesToList()
     end
 
-    function em:getEntityName( entity )
-        return self.entityNames[entity]
-    end
-
-    function em:entityHasComponent( entity, component )
-        assert( self.entityExists( entity ), "Entity "..self:entityToString(entity).." does not exist." )
-        return self.entitiesToComponentTypes:get( entity ):contains( component._typeid )
+    function em:entityHasComponent( entity, componentType )
+        self:assert_entity_exists( entity )
+        return self.entitiesToComponentTypes:get( entity ):contains( componentType._typeid )
     end
 
     function em:entityHasComponents( entity, ... )
         local components = {...}
-        local unmatchedComponents = #components
         for i, component in ipairs( components ) do
-            if self:entityHasComponent( entity, component ) then
-                unmatchedComponents = unmatchedComponents - 1
-            end
+            if not self:entityHasComponent( entity, component ) then return false end
         end
-        return unmatchedComponents == 0
+        return true
+    end
+
+    function em:entityHasName( entity, name )
+        return self.entityNames[entity] == name
+    end
+
+    function em:getEntityName( entity )
+        if not self.entityNames[entity] then
+            return "NIL"
+        end
+        return self.entityNames[entity]
     end
 
     -----------------------
@@ -147,8 +169,10 @@ function EntityManager()
     -----------------------
     
     function em:entityToString( entity )
-        local s = "Entity (%s:%s)"
-        return s:format( entity, self:getEntityName(entity) )
+        if not entity then
+            return "NIL"
+        end
+        return string.format( "(%s:%s)", entity, self:getEntityName(entity) )
     end
 
     -----------------------
@@ -156,27 +180,37 @@ function EntityManager()
     -----------------------
 
     function em:destroyEntity( entity )
-        assert( self.entityExists( entity ), "Entity "..self:entityToString(entity).." does not exist." )
-        local components = self:getEntityComponents( entity )
-        for i, component in ipairs( components ) do
-            self:destroyComponent( entity, component )
+        self:assert_entity_exists( entity )
+        self.entities[entity] = nil
+        local entityToComponentTypes = self.entitiesToComponentTypes:get( entity )
+        for type, component in pairs(entityToComponentTypes) do
+            self:destroyComponentInstance( entity, component )
         end
         self.entitiesToComponentTypes:set( entity, nil )
-        self.entities[entity] = false
         EventDispatcher.send( "on_entity_destroy", nil, entity )
     end
 
-    function em:destroyComponent( entity, component )
-        assert( self:componentTypeExists(component), "Component "..tostring(component).." does not exist." )
-        self.componentTypesToEntities:get( component ):set( entity, nil )
+    function em:destroyComponentInstance( entity, component )
+        local componentTypeToEntities = self.componentTypesToEntities:get( component._typeid )
+        componentTypeToEntities:set( entity, nil )
+        local entityToComponentTypes = self.entitiesToComponentTypes:get( entity )
+        entityToComponentTypes:set( component._typeid, nil )
+
         for i, v in ipairs( self.components ) do
             if v == component then
                 table.remove( self.components, i )
                 break
             end
         end
-        EventDispatcher.send( "on_component_destroy", nil, component )
+
         component:onDestroy()
+        EventDispatcher.send( "on_component_destroy", nil, component )
+    end
+
+    function em:removeComponentFromEntity( entity, componentType )
+        self:assert_entity_has_componentType( entity, componentType )
+        local component = self:getComponentFromEntity( entity, componentType )
+        self:destroyComponentInstance( entity, component )
     end
 
     -----------------------
