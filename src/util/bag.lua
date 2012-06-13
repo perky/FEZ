@@ -27,7 +27,11 @@ function bag:contains( e )
 end
 
 function bag:hasType( component )
-	return self[component._type] ~= nil
+	return self[component:type()] ~= nil
+end
+
+function bag:getType( component )
+	return self[component:type()]
 end
 
 function bag:valuesToList()
