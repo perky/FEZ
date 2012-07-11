@@ -6,6 +6,12 @@ FEZ
 
 A lua library that helps you create component based projects.
 
+-- Note --
+The example in this branch is currently broken.
+I'll try to get a fix up as soon as I can, meanwhile you can still use FEZ, the example should
+still give you an idea of how the API works, hey you could event challenge yourself and try to get the 
+example working! (Nah just kidding, i'll fix it.)
+
 About
 ==========
 
