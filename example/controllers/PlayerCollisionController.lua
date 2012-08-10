@@ -8,7 +8,7 @@ function PlayerCollisionController:onInit()
 	self.shapeHexagon   = ComponentCache( ShapeHexagon, entityManager )
 end
 
-function PlayerCollisionController:updateEntity( dt, entity, ... )
+function PlayerCollisionController:updateEntity( entity, ... )
 	local hexagonEntities = entityManager.tagManager:getEntitiesWithTag( "Hexagon" )
 	local shapeCircle = self.shapeCircle( entity )
 	local x, y        = self.transform( entity ):getXY()
