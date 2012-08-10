@@ -54,7 +54,7 @@ end
 -- Update:
 -----------------------
 
-function InputController:updateEntity( dt, entity, ... )
+function InputController:updateEntity(entity, ... )
 	local mx, my         = love.mouse.getPosition()
 	local x, y           = self.transform( entity ):getXY()
 	local shapeCollision = self.shapeCollision( entity )
