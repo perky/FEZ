@@ -74,7 +74,7 @@ function EntityManager()
         for typeid, component in pairs( entityToComponentTypes ) do
             component:onOwnerRefresh( entity, entityToComponentTypes )
         end
-        EventDispatcher.send( "on_entity_refresh", nil, entity, entityToComponentTypes )
+        EventDispatcher.send( "on_entity_refresh", nil, entity, entityToComponentTypes, self )
     end
 
     -----------------------
@@ -187,7 +187,7 @@ function EntityManager()
             self:destroyComponentInstance( entity, component )
         end
         self.entitiesToComponentTypes:set( entity, nil )
-        EventDispatcher.send( "on_entity_destroy", nil, entity )
+        EventDispatcher.send( "on_entity_destroy", nil, entity, self )
     end
 
     function em:destroyComponentInstance( entity, component )

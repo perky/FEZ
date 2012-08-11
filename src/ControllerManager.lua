@@ -39,8 +39,9 @@ function Controller( name, inherits )
     -- Interface:
     -----------------------
 
-    function controller:updateEntity( entity, ... ) end
-    function controller:renderEntity( entity, ... )     end
+    function controller:onUpdate( aspectEntity, ... )   end
+    function controller:updateEntity( entity, ... )     end -- DEPRECATED.
+    function controller:renderEntity( entity, ... )     end -- DEPRECATED.
     function controller:onInit( ... )                   end
     function controller:onDestroy()                     end
     function controller:onControllersRefresh( cm )      end
@@ -59,10 +60,6 @@ function Controller( name, inherits )
     function controller.setup( new, controllerManager )
         controllerManager:add( new )
         new.controllerManager = controllerManager
-        new.filters  = {}
-        new.entities = {}
-        EventDispatcher.listen( "on_entity_refresh", new, new.eventEntityRefresh, new )
-        EventDispatcher.listen( "on_entity_destroy", new, new.eventEntityDestroy, new )
     end
 
     function controller:destroy(  )
@@ -76,6 +73,7 @@ function Controller( name, inherits )
     -- Event Callbacks:
     -----------------------
     
+    -- DEPRECATED.
     function controller:eventEntityRefresh( entity, componentTypes )
         if self:canControllEntity( entity, componentTypes ) then
             self:addEntity( entity )
@@ -84,6 +82,7 @@ function Controller( name, inherits )
         end
     end
 
+    -- DEPRECATED.
     function controller:eventEntityDestroy( entity )
         self:removeEntity( entity )
     end
@@ -92,6 +91,16 @@ function Controller( name, inherits )
     -- Methods:
     -----------------------
 
+    function controller:setAspect( aspect )
+        assert( aspect ~= nil, "Aspect is nil.")
+        self.aspect = aspect
+    end
+
+    function controller:getAspect()
+        return self.aspect
+    end
+
+    -- DEPRECATED.
     function controller:canControllEntity( entity, componentTypes )
         if #self.filters > 0 then
             local unmatchedComponents = #self.filters
@@ -106,6 +115,7 @@ function Controller( name, inherits )
         end
     end
 
+    -- DEPRECATED.
     function controller:hasEntity( entity )
         for i, v in ipairs( self.entities ) do
             if v == entity then return true end
@@ -113,12 +123,14 @@ function Controller( name, inherits )
         return false
     end
     
+    -- DEPRECATED.
     function controller:addEntity( entity )
         if not self:hasEntity( entity ) then
             table.insert( self.entities, entity )
         end
     end
 
+    -- DEPRECATED.
     function controller:removeEntity( entity )
         for i, v in ipairs( self.entities ) do
             if v == entity then
@@ -128,6 +140,7 @@ function Controller( name, inherits )
         end
     end
 
+    -- DEPRECATED.
     function controller:setComponentFilters( ... )
         local components = {...}
         for i, v in ipairs( components ) do
@@ -136,6 +149,7 @@ function Controller( name, inherits )
         self.filters = components
     end
 
+    -- DEPRECATED.
     function controller:addComponentFilters( ... )
         local components = {...}
         for i, v in ipairs(components) do
@@ -144,12 +158,14 @@ function Controller( name, inherits )
         end
     end
     
+    -- DEPRECATED.
     function controller:doesFilterComponent( component )
         for i, v in ipairs( self.filters ) do
             if v == component then return true end
         end
     end
 
+    -- DEPRECATED.
     function controller:getFilteredEntities()
         return self.entities
     end
@@ -170,19 +186,21 @@ function Controller( name, inherits )
     -----------------------
 
     function controller:update( ... )
-        self:updateEntities( self.entities, ... )
-    end
-
-    function controller:updateEntities( entities, ... )
-        for i, entity in ipairs( entities ) do
-            self:updateEntity( entity, ... )
+        if self.aspect then
+            for aspectEntity in self.aspect.list() do
+                self:onUpdate( aspectEntity, ... )
+            end
+        else
+            self:onUpdate( nil, ... )
         end
     end
 
+    -- DEPRECATED.
     function controller:render( ... )
         self:renderEntities( self.entities, ... )
     end
 
+    -- DEPRECATED.
     function controller:renderEntities( entities, ... )
         for i, entity in ipairs( entities ) do
             self:renderEntity( entity, ... )

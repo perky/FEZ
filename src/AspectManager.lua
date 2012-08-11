@@ -1,9 +1,19 @@
-local function addEntityToAspect( entity, aspect )
-	local newAspectEntity = AspectEntity( entity, aspect )
+-----------------------
+-- Aspect Manager
+-----------------------
+-----------------------
+-- Local variables:
+-----------------------
+-----------------------
+-- Local Functions:
+-----------------------
+
+local function addEntityToAspect( entity, aspect, entityManager )
+	local newAspectEntity = AspectEntity( entity, aspect, entityManager )
 	table.insert( aspect.aspectEntities, newAspectEntity )
 end
 
-local function removeEntityFromAspectList( entity, aspect )
+local function removeEntityFromAspect( entity, aspect )
 	for i, aspectEntity in ipairs( aspect.aspectEntities ) do
 		if aspectEntity.entity == entity then
 			return table.remove( aspect.aspectEntities, i )
@@ -21,49 +31,54 @@ local function aspectHasEntity( aspect, entity )
 	return false
 end
 
-local function entityHasComponents( entityComponents, aspectComponents )
-	for _, component in ipairs( aspectComponents ) do
-		if not entityComponents:hasType( component ) then
-			return false
-		end
-	end
-
-	return true
-end
-
-local function onEntityRefreshed( aspect, entity, componentTypes )
-	if entityHasComponents( componentTypes, aspect.components ) and not aspectHasEntity( aspect, entity ) then
-		addEntityToAspect( entity, aspect )
+local function onEntityRefreshed( aspect, entity, componentTypes, entityManager )
+	local aspectComponents = aspect:getComponents()
+	if entityManager:entityHasComponents( entity, unpack(aspectComponents) ) and not aspectHasEntity( aspect, entity ) then
+		addEntityToAspect( entity, aspect, entityManager )
 	elseif aspectHasEntity( aspect, entity ) then
 		removeEntityFromAspect( entity, aspect )
 	end
 end
 
-local function onEntityDestroyed( aspect, entity )
+local function onEntityDestroyed( aspect, entity, entityManager )
 	if aspectHasEntity( aspect, entity ) then
 		removeEntityFromAspect( entity, aspect )
 	end
 end
 
-function Aspect( name, entityManager, ... )
-	local components = {...}
+-----------------------
+-- Main Functions:
+-----------------------
+
+function Aspect( name )
 	local newAspect = {}
 	newAspect._kind = "Aspect"
 	newAspect._name = name
-	newAspect.entityManager = entityManager
-	newAspect.components = components
-	newAspect.aspectEntities = {}
+
+	local aspectEntities = {}
+	newAspect.aspectEntities = aspectEntities
+
+	function newAspect:list()
+		local i = 0
+		local size = #aspectEntities
+		return function()
+			i = i + 1
+			if i <= size then return aspectEntities[i] end
+		end
+	end
 
 	EventDispatcher.listen( "on_entity_refresh", newAspect, onEntityRefreshed, newAspect )
     EventDispatcher.listen( "on_entity_destroy", newAspect, onEntityDestroyed, newAspect )
     return newAspect
 end
 
-function AspectEntity( entity, aspect )
+function AspectEntity( entity, aspect, entityManager )
 	local newAspectEntity = {}
 	newAspectEntity._kind = "AspectEntity"
 	newAspectEntity.entity = entity
-	for _, component in ipairs( aspect.components ) do
-		newAspectEntity[name] = aspect.entityManager:getComponentFromEntity( entity, component )
+
+	for _, component in ipairs( aspect:getComponents() ) do
+		newAspectEntity[component._name] = entityManager:getComponentFromEntity( entity, component )
 	end
+	return newAspectEntity
 end
