@@ -6,11 +6,6 @@ FEZ
 
 A lua library that helps you create component based projects.
 
--- Note --
-The example in this branch is currently broken.
-I'll try to get a fix up as soon as I can, meanwhile you can still use FEZ, the example should
-still give you an idea of how the API works, hey you could event challenge yourself and try to get the 
-example working! (Nah just kidding, i'll fix it.)
 
 About
 ==========
@@ -20,16 +15,24 @@ Lua Entity System is a lua library to help you get started with component based 
 In component based programming, entities are made up of components, the entity itself is just a number that identifies a collection of components.
 The components hold the data and do the logic.
 
-In the Lua Entity System, there are four kinds of components:
+In the Lua Entity System, there are four kinds of classes:
 * Attributes
-* Behaviours
+* Aspects
 * Controllers
-* Renderers
 
-Attributes hold data about an object and nothing else, they mainly consist of getters and setters to the data. Some attributes might do validation to the data or perform transformations. The point of the attribute is to separate data from logic.
+Entities are simply a unique integer. FEZ has a class called EntityManager which you use to create new entities and to
+tie attributes to entities.
 
-Behaviours perform logic code, usually using the data from the entities attributes. Behaviours belong to an entity and that entity is passed to it's update method.
+Attributes are the components that make up your game objects. They are containers for data and nothing else. 
 
-Controllers don't belong to any entity, you need to update controllers explicitly. Controllers have an updateEntity method which is by default run for every entity. Controllers can set a filter so they only perform logic on entities with the given components.
+Aspects are a collection of attributes. When a new entity is created with a certain set of attributes it is added to the aspect.
 
-Renderers are the same as controllers, we just use this term to separate logic from rendering. 
+Controllers contain all the logic of your game. You give controllers an aspect and they update all entities with this aspect.
+
+Yak-Man Example
+==========
+
+To get a better idea about how FEZ works take a look a the Yak-Man Example.
+You will need LÖVE to run the example, but just looking over the source can help.
+You can download LÖVE at http://love2d.org
+The example is a work in progress.

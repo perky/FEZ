@@ -4,7 +4,6 @@ function SpriteRenderer:onInit()
 	self:setAspect( RenderableAspect )
 	EventDispatcher.listen("on_TileMovementController_interval", nil, self.onTileMovementControllerInterval, self)
 	EventDispatcher.listen("on_WolfMovementController_interval", nil, self.onTileMovementControllerInterval, self)
-	EventDispatcher.listen("on_game_over", nil, self.onGameOver, self)
 end
 
 -----------------------
@@ -27,13 +26,6 @@ function SpriteRenderer:onTileMovementControllerInterval( tileMovementAspect )
 			sprite.lastAngle = sprite.angle
 			break
 		end
-	end
-end
-
-function SpriteRenderer:onGameOver()
-	for renderableAspect in RenderableAspect.list() do
-		--renderableAspect.AnimatingSpriteAttribute.position = renderableAspect.TransformAttribute.position:clone()
-		--renderableAspect.AnimatingSpriteAttribute.lastPosition = renderableAspect.AnimatingSpriteAttribute.position:clone()
 	end
 end
 
